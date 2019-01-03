@@ -46,7 +46,7 @@ async def handle(message):
 		# Get donators role (to set right position)
 		donor_role = None
 		for i in message.author.roles:
-			if i.name.lower() == "donators":
+			if i.name.lower() == "donators.":
 				donor_role = i
 		if donor_role is None:
 			await glob.client.send_message(message.channel, "**It looks like you're not a donor**")

@@ -33,7 +33,7 @@ def give_donor_post():
 			# Get donators role
 			donor_role = None
 			for i in discord_server.roles:
-				if i.name.lower() == "donators":
+				if i.name.lower() == "donators.":
 					donor_role = i
 
 			# Make sure the donators role exists
