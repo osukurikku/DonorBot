@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
 	# Connect to ripple database
 	try:
-		console.printn("> Connecting to ripple database")
+		console.printn("> Connecting to katori database")
 		db_config = glob.config.config["database"]
 		glob.db = database.Db(
 			db_config["host"],

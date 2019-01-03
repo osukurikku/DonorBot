@@ -3,7 +3,7 @@
 - Origin: https://git.zxq.co/ripple/DonorBot
 - Mirror: https://github.com/osuripple/DonorBot
 
-This Discord bot handles custom roles (and custom username colors) for Ripple donors.
+This Discord bot handles custom roles (and custom username colors) for Katoris donors.
 
 ## Requirements
 - Python 3.5
