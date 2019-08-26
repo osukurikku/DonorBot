@@ -52,7 +52,6 @@ def clear_donor_post():
 				user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {i['id']}")
 				for badge in user_badges:
 					if badge["badge"] in usersWithBadgesToIgnore:
-						print(f"Skip {i['id']}")
 						continue
 
 				print("Removing donor for user {}".format(i["id"]))
@@ -99,7 +98,6 @@ def clear_donor_post():
 			user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {donor['id']}")
 			for badge in user_badges:
 				if badge["badge"] in usersWithBadgesToIgnore:
-					print(f"Skip {donor['id']}")
 					continue
 			
 			# Remove website and ingame expired donor privilege
