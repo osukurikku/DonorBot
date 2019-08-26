@@ -6,6 +6,18 @@ from objects import glob
 from constants import exceptions
 from helpers import coro
 
+usersWithBadgesToIgnore = [
+	2, # Owner
+	3, # Developer
+	4, # Chat Moderator
+	5, # BAT
+	6, # Contributor
+	7, # Donor
+	8, # Tournament Staff
+	10, # Administrator
+	17 # Replay Moderator
+]
+
 @bottle.route("/api/v1/clear_donor", method="POST")
 def clear_donor_post():
 	data = {
@@ -36,6 +48,13 @@ def clear_donor_post():
 
 			# Remove donators and custom roles to expired donors
 			for i in expired:
+				print("Check user, maybe he is epic gamer")
+				user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {i['id']}")
+				for badge in user_badges:
+					if badge["badge"] in usersWithBadgesToIgnore:
+						print(f"Skip {i['id']}")
+						continue
+
 				print("Removing donor for user {}".format(i["id"]))
 
 				# First, remove donor badge
@@ -73,8 +92,18 @@ def clear_donor_post():
 				# Delete custom role from server
 				coro.sync_coroutine(glob.client.delete_role(discord_server, custom_role))
 
-		# Remove website and ingame expired donor privilege
-		glob.db.execute("UPDATE users SET privileges = privileges & ~4 WHERE privileges & 4 > 0 AND donor_expire <= %s", [int(time.time())])
+		# Remove not epic gamers priviliges
+		print("Removing priviliges users who not registered in discord party")
+		allexpireddonors = glob.db.fetch_all(f"SELECT id FROM users WHERE donor_expire <= {int(time.time())}")
+		for donor in allexpireddonors:
+			user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {donor['id']}")
+			for badge in user_badges:
+				if badge["badge"] in usersWithBadgesToIgnore:
+					print(f"Skip {i['id']}")
+					continue
+			
+			# Remove website and ingame expired donor privilege
+			glob.db.execute("UPDATE users SET privileges = privileges & ~4 WHERE id = %s", [donor['id']])
 	except exceptions.InvalidSecretKeyError:
 		data["status"] = 403
 		data["message"] = "Bot not in server"
