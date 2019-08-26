@@ -26,7 +26,7 @@ def clear_donor_post():
 			# Get donators role object
 			donor_role = None
 			for i in discord_server.roles:
-				if i.name.lower() == "donators":
+				if i.name.lower() == "donators.":
 					donor_role = i
 
 			# Make sure the donorRole is valid
@@ -39,7 +39,7 @@ def clear_donor_post():
 				print("Removing donor for user {}".format(i["id"]))
 
 				# First, remove donor badge
-				glob.db.execute("DELETE FROM user_badges WHERE user = %s AND badge = '14' LIMIT 1", [i["id"]])
+				glob.db.execute("DELETE FROM user_badges WHERE user = %s AND badge = 7 LIMIT 1", [i["id"]])
 
 				# Then, do discord stuff
 				# Make sure the discord id is valid
