@@ -50,9 +50,8 @@ def clear_donor_post():
 			for i in expired:
 				print("Check user, maybe he is epic gamer")
 				user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {i['id']}")
-				for badge in user_badges:
-					if badge["badge"] in usersWithBadgesToIgnore:
-						continue
+				if any(b["badge"] in usersWithBadgesToIgnore for b in user_badges):
+					continue
 
 				print("Removing donor for user {}".format(i["id"]))
 
@@ -93,12 +92,11 @@ def clear_donor_post():
 
 		# Remove not epic gamers priviliges
 		print("Removing priviliges users who not registered in discord party")
-		allexpireddonors = glob.db.fetch_all(f"SELECT id FROM users WHERE donor_expire <= {int(time.time())}")
+		allexpireddonors = glob.db.fetch_all(f"SELECT id FROM users WHERE users.privileges & 4 > 0 AND donor_expire <= {int(time.time())}")
 		for donor in allexpireddonors:
 			user_badges = glob.db.fetch_all(f"SELECT badge FROM user_badges WHERE user = {donor['id']}")
-			for badge in user_badges:
-				if badge["badge"] in usersWithBadgesToIgnore:
-					continue
+			if any(b["badge"] in usersWithBadgesToIgnore for b in user_badges):
+				continue
 			
 			# Remove website and ingame expired donor privilege
 			glob.db.execute("UPDATE users SET privileges = privileges & ~4 WHERE id = %s", [donor['id']])
