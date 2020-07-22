@@ -1,3 +1,4 @@
+
 import bottle
 import time
 import json
@@ -12,7 +13,6 @@ usersWithBadgesToIgnore = [
 	4, # Chat Moderator
 	5, # BAT
 	6, # Contributor
-	7, # Donor
 	8, # Tournament Staff
 	10, # Administrator
 	17 # Replay Moderator
@@ -31,7 +31,7 @@ def clear_donor_post():
 		# Do all the work if the query has returned something
 		if expired is not None:
 			# Get discord server object and make sure it's valid
-			discord_server = glob.client.get_server(glob.config.config["discord"]["server_id"])
+			discord_server = glob.client.get_guild(glob.config.config["discord"]["server_id"])
 			if discord_server is None:
 				raise exceptions.NotInServerError()
 
@@ -43,7 +43,7 @@ def clear_donor_post():
 
 			# Make sure the donorRole is valid
 			if donor_role is None:
-				coro.sync_coroutine(glob.client.send_message(discord_server.get_default_channel(), "Error while cleaning expired donors! Looks like the donators role is gone! Nyo-sama where are you? :'("))
+				coro.sync_coroutine(discord_server.get_default_channel().send("Error while cleaning expired donors! Looks like the donators role is gone! Nyo-sama where are you? :'("))
 				raise exceptions.NoRoleError()
 
 			# Remove donators and custom roles to expired donors
@@ -64,12 +64,12 @@ def clear_donor_post():
 					continue
 
 				# Get the user and make sure he is still inside the server	
-				discord_user = discord_server.get_member(str(i["discordid"]))
+				discord_user = discord_server.get_member(i["discordid"])
 				if discord_user is None:
 					continue
 
 				# Remove donators role
-				coro.sync_coroutine(glob.client.remove_roles(discord_user, donor_role))
+				coro.sync_coroutine(discord_user.remove_roles(donor_role))
 
 				# Unlink discord and ripple accounts
 				glob.db.execute("DELETE FROM discord_roles WHERE discordid = %s LIMIT 1", [i["discordid"]])
@@ -80,7 +80,7 @@ def clear_donor_post():
 				# Get the custom role
 				custom_role = None
 				for j in discord_server.roles:
-					if j.id == str(i["roleid"]):
+					if j.id == i["roleid"]:
 						custom_role = j
 
 				# Make sure the custom role is valid
@@ -88,7 +88,7 @@ def clear_donor_post():
 					continue
 
 				# Delete custom role from server
-				coro.sync_coroutine(glob.client.delete_role(discord_server, custom_role))
+				coro.sync_coroutine(custom_role.delete())
 
 		# Remove not epic gamers priviliges
 		print("Removing priviliges users who not registered in discord party")

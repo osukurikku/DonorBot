@@ -1,5 +1,6 @@
 import bottle
 import json
+import traceback
 
 from objects import glob
 from constants import exceptions
@@ -23,10 +24,13 @@ def give_donor_post():
 				raise exceptions.InvalidSecretKeyError()
 
 			# Check if the user if in the server
-			discord_server = glob.client.get_server(glob.config.config["discord"]["server_id"])
+			discord_server = glob.client.get_guild(glob.config.config["discord"]["server_id"])
+			print(discord_server)
 			if discord_server is None:
 				raise exceptions.BotNotInServerError()
-			discord_user = discord_server.get_member(bottle.request.forms.get("discord_id"))
+			if not bottle.request.forms.get("discord_id", "").isdigit():
+				raise exceptions.NotInServerError()
+			discord_user = discord_server.get_member(int(bottle.request.forms.get("discord_id")))
 			if discord_user is None:
 				raise exceptions.NotInServerError()
 
@@ -41,23 +45,25 @@ def give_donor_post():
 				raise exceptions.NoRoleError()
 
 			# Give donators role to the user
-			coro.sync_coroutine(glob.client.add_roles(discord_user, donor_role))
-		except exceptions.InvalidArgumentsError:
-			data["status"] = 400
-			data["message"] = "Missing/invalid arguments"
-		except exceptions.InvalidSecretKeyError:
-			data["status"] = 403
-			data["message"] = "Invalid secret key"
-		except exceptions.NotInServerError:
-			data["status"] = 404
-			data["message"] = "User not in server"
-		except exceptions.BotNotInServerError:
-			data["status"] = 403
-			data["message"] = "Bot not in server"
-		except exceptions.NoRoleError:
-			data["status"] = 500
-			data["message"] = "No donators role found in server"
-		except:
+			coro.sync_coroutine(discord_user.add_roles(donor_role))
+		# except exceptions.InvalidArgumentsError:
+		# 	data["status"] = 400
+		# 	data["message"] = "Missing/invalid arguments"
+		# except exceptions.InvalidSecretKeyError:
+		# 	data["status"] = 403
+		# 	data["message"] = "Invalid secret key"
+		# except exceptions.NotInServerError:
+		# 	data["status"] = 404
+		# 	data["message"] = "User not in server"
+		# except exceptions.BotNotInServerError:
+		# 	data["status"] = 403
+		# 	data["message"] = "Bot not in server"
+		# except exceptions.NoRoleError:
+		# 	data["status"] = 500
+		# 	data["message"] = "No donators role found in server"
+		except Exception as e:
+			print(e)
+			traceback.print_exc()
 			data["status"] = 500
 			data["message"] = "Unhandled exception"
 		finally:

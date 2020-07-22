@@ -12,12 +12,12 @@ async def handle(message):
 	discord_id = message.author.id
 	user_info = glob.db.fetch("SELECT users.privileges, discord_roles.roleid FROM users LEFT JOIN discord_roles ON users.id = discord_roles.userid WHERE discordid = %s LIMIT 1", [discord_id])
 	if user_info is None or user_info["privileges"] & 4 == 0:
-		await glob.client.send_message(message.channel, "**You're not allowed to use this command**, only donors can use it.")
+		await message.channel.send("**You're not allowed to use this command**, only donors can use it.")
 		return
 
 	# Make sure the user is not abusing the command
 	if not glob.rate_limiters["!role"].check(discord_id):
-		await glob.client.send_message(message.channel, "**You can use the !role command only once every 5 minutes.** Please try again later.")
+		await message.channel.send("**You can use the !role command only once every 5 minutes.** Please try again later.")
 		return
 
 	# Get arguments
@@ -31,7 +31,7 @@ async def handle(message):
 
 	# Make sure the color is valid
 	if not is_hex_color(role_color):
-		await glob.client.send_message(message.channel, "**Invalid HEX color.** Use this tool to choose your color: http://www.colorpicker.com/. The HEX color is the one that starts with '#'.")
+		await message.channel.send("**Invalid HEX color.** Use this tool to choose your color: http://www.colorpicker.com/. The HEX color is the one that starts with '#'.")
 		return
 
 	# Convert the color from HEX to int
@@ -39,7 +39,7 @@ async def handle(message):
 
 	async def create_custom_role():
 		# Set right permissions
-		role_permissions = message.server.default_role
+		role_permissions = message.guild.default_role
 		role_permissions = role_permissions.permissions
 		role_permissions.change_nickname = True
 
@@ -49,15 +49,15 @@ async def handle(message):
 			if i.name.lower() == "donators.":
 				donor_role = i
 		if donor_role is None:
-			await glob.client.send_message(message.channel, "**It looks like you're not a donor**")
+			await message.channel.send("**It looks like you're not a donor**")
 			return
 
 		# Create the role, set the position and add it
-		role = await glob.client.create_role(message.server, name=role_name, permissions=role_permissions, colour=discord.Colour(role_color), hoist=False, mentionable=False)
-		await glob.client.move_role(message.server, role, donor_role.position)
-		await glob.client.add_roles(message.author, role)
+		role = await message.guild.create_role(name=role_name, permissions=role_permissions, colour=discord.Colour(role_color), hoist=False, mentionable=False)
+		await role.edit(position=donor_role.position)
+		await message.author.add_roles(role)
 		glob.db.execute("UPDATE discord_roles SET roleid = %s WHERE discordid = %s LIMIT 1", [role.id, message.author.id])
-		await glob.client.send_message(message.channel, "**Your role has been created successfully! Welcome to the donors club!**")
+		await message.channel.send("**Your role has been created successfully! Welcome to the donors club!**")
 		return
 
 	async def edit_custom_role(role_id):
@@ -73,12 +73,12 @@ async def handle(message):
 			return await create_custom_role()
 
 		# Role object found, update it
-		await glob.client.edit_role(message.server, role, name=role_name, colour=discord.Colour(role_color))
-		await glob.client.send_message(message.channel, "**Your custom role has been edited successfully!**")
+		await role.edit(name=role_name, colour=discord.Colour(role_color))
+		await message.channel.send("**Your custom role has been edited successfully!**")
 		return
 
 	# Determine if this user has already a custom role
 	if user_info["roleid"] != 0:
-		await edit_custom_role(str(user_info["roleid"]))
+		await edit_custom_role(user_info["roleid"])
 	else:
 		await create_custom_role()

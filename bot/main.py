@@ -32,7 +32,7 @@ async def on_message(message):
 				# Syntax check
 				if len(args) < len(required_args):
 					# Invalid syntax
-					await glob.client.send_message(message.channel, "Wrong syntax: {} {}".format(trigger, cmd.syntax))
+					await message.channel.send("Wrong syntax: {} {}".format(trigger, cmd.syntax))
 					return
 
 			# Syntax is valid. Run the callback
